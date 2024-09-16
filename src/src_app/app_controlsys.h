@@ -20,8 +20,11 @@
 // t is second = rate * 50
 #define RECOVERY_PERIOD		50 // 1 second delay
 
+// Error tolerance
+#define ERR_TOL						5 // 5 ADC reading
+
 // Integral limit
-#define INTG_LIMIT				300
+#define INTG_LIMIT				375000
 
 // Fixed point math
 // using int16 with the format of Q1.14
@@ -67,8 +70,9 @@ uint16_t app_controlsys_getImotor();
 
 void app_controlsys_updateSP(uint8_t degree);
 void app_controlsys_runner();
-void app_controlsys_vmonRunner();
-uint8_t app_controlsys_faultDetected();
+
+void app_mon_vmonRunner();
+uint8_t app_mon_faultDetected();
 
 void app_controlsys_commandMotor(int16_t speed);
 

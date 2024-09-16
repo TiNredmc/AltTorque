@@ -7,15 +7,6 @@ SFIXPOINT32 p_term = 0;
 SFIXPOINT32 i_term = 0;
 SFIXPOINT32 d_term = 0;
 
-/////////// Fault monitoring ///////////
-uint8_t vmon_fsm = 0;
-
-uint8_t vbus_hysteresis = 0;
-uint8_t vreg_hysteresis = 0;
-uint8_t mfault_flag 		= 0;
-
-volatile uint8_t recovery_delay = 0;
-
 uint8_t first_read = 0;
 
 // Private typedef
@@ -133,10 +124,21 @@ void app_controlsys_runner(){
 	
 	i_term += (pid_t.angle_error * pid_t.Ki);
 	
-	if(i_term > (INTG_LIMIT *(1 << 13)))
-		i_term = (INTG_LIMIT *(1 << 13));
-	if(i_term < (-INTG_LIMIT *(1 << 13)))
-		i_term = (-INTG_LIMIT *(1 << 13));
+	// Integrator Anti windup
+	if(i_term > INTG_LIMIT)
+		i_term = INTG_LIMIT;
+	if(i_term < -INTG_LIMIT)
+		i_term = -INTG_LIMIT;
+	
+	// Tolerance checker
+	// Error value is between -ERR_TOL and ERR_TOL
+	if(
+		(pid_t.angle_error > -ERR_TOL) &&
+		(pid_t.angle_error < ERR_TOL)
+	){
+		// Reset integral term
+		i_term = 0;
+	}
 	
 	d_term = 
 		(pid_t.angle_error - pid_t.prevError) * pid_t.Kd;
@@ -151,99 +153,6 @@ void app_controlsys_runner(){
 	);
 	
 	adc_softTrigger();// Trigger next ADC conversion
-}
-
-// Monitor VBus and Vreg
-void app_controlsys_vmonRunner(){
-
-	if(vbus_hysteresis == 0){
-		// Detect VBus undervoltage
-		if(app_controlsys_getVBus() < VBUS_ADC_VUVLO){
-			
-			vbus_hysteresis = 1;
-		}
-	}else{
-		// Recover VBus from undervoltage
-		if(app_controlsys_getVBus() > VBUS_ADC_VNORMAL){
-			vbus_hysteresis = 0;
-		}
-	}
-	
-	if(vreg_hysteresis == 0){
-		// Detect Vreg underfoltage
-		if(app_controlsys_getVReg() < VREG_ADC_VUVLO){
-			vreg_hysteresis = 1;
-		}
-	}else{
-		// Recover VReg from undervoltage
-		if(app_controlsys_getVReg() > VBUS_ADC_VNORMAL){
-			vreg_hysteresis = 0;
-		}
-	}
-	
-	// Detect motor drive OCP OTP and/or OVP
-	if(!(GPIO_ISTAT(GPIOA) & (1 << nFAULT_Pin))){
-		mfault_flag = 1;
-	}else{
-		mfault_flag = 0;
-	}
-	
-	switch(vmon_fsm){
-		case 0:// Normal operation
-		{
-			// Check for Drive fault
-			// Overcurrent
-			// Over temp
-			// Over voltage
-			if(mfault_flag == 1){
-				// Lock the motor driver 
-				GPIO_OCTL(GPIOA) &= ~(1 << nSLEEP_Pin);
-				vmon_fsm = 1;
-			}
-			
-			// Check for Vbus undervoltage
-			if(vbus_hysteresis == 1){
-				// Lock the motor driver 
-				GPIO_OCTL(GPIOA) &= ~(1 << nSLEEP_Pin);
-				vmon_fsm = 1;
-			}
-			
-			// Check for Vreg undervoltage
-			if(vreg_hysteresis == 1){
-				vmon_fsm = 1;
-			}
-			
-			GPIO_OCTL(GPIOA) |= (1 << nSLEEP_Pin);
-			
-		}
-		break;
-		
-		case 1:// Recovery from fault
-		{
-			if(
-				(vbus_hysteresis == 0) &&	
-				(vreg_hysteresis == 0) &&
-				(mfault_flag == 0		)
-			){
-				recovery_delay++;
-			}else{
-				recovery_delay = 0;// reset delay when fault came back again
-			}
-			
-			if(recovery_delay > RECOVERY_PERIOD){
-				// Unlock the motor driver
-				GPIO_OCTL(GPIOA) |= (1 << nSLEEP_Pin);
-				vmon_fsm = 0;
-			}
-			
-		}
-		break;
-	}
-	
-}
-
-uint8_t app_controlsys_faultDetected(){
-	return vmon_fsm ? 1 : 0;
 }
 	
 
