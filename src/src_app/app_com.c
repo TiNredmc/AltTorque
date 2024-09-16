@@ -232,7 +232,7 @@ void app_comProcRx(){
 				(recv_packet_t.Argument8[0] != 0x00)
 			){
 				app_nvm_setSelfID(recv_packet_t.Argument8[0]);
-				if(app_nvm_updateData()){
+				if(app_nvm_updateData() == 0){
 					servo_self_id = app_nvm_getSelfID();
 					send_packet_t.Argument8[0] = 'D';
 					send_packet_t.Argument8[1] = 'O';
@@ -241,18 +241,13 @@ void app_comProcRx(){
 					break;
 				}
 			}
-									
-			send_packet_t.Argument8[0] = 'F';
-			send_packet_t.Argument8[1] = 'A';
-			send_packet_t.Argument8[2] = 'I';
-			send_packet_t.Argument8[3] = 'L';
 		}
 		break;
 		
 		case 'P':// Set Kp
 		{
 			app_nvm_setSelfKp(recv_packet_t.Argument32);
-			if(app_nvm_updateData()){
+			if(app_nvm_updateData() == 0){
 				app_controlsys_config(
 					app_nvm_getSelfKp(),
 					app_nvm_getSelfKi(),
@@ -262,11 +257,6 @@ void app_comProcRx(){
 				send_packet_t.Argument8[1] = 'O';
 				send_packet_t.Argument8[2] = 'N';
 				send_packet_t.Argument8[3] = 'E';
-			}else{
-				send_packet_t.Argument8[0] = 'F';
-				send_packet_t.Argument8[1] = 'A';
-				send_packet_t.Argument8[2] = 'I';
-				send_packet_t.Argument8[3] = 'L';
 			}
 		}
 		break;
@@ -274,7 +264,7 @@ void app_comProcRx(){
 		case 'I':// Set Ki
 		{
 			app_nvm_setSelfKi(recv_packet_t.Argument32);
-			if(app_nvm_updateData()){
+			if(app_nvm_updateData() == 0){
 				app_controlsys_config(
 					app_nvm_getSelfKp(),
 					app_nvm_getSelfKi(),
@@ -284,11 +274,6 @@ void app_comProcRx(){
 				send_packet_t.Argument8[1] = 'O';
 				send_packet_t.Argument8[2] = 'N';
 				send_packet_t.Argument8[3] = 'E';
-			}else{
-				send_packet_t.Argument8[0] = 'F';
-				send_packet_t.Argument8[1] = 'A';
-				send_packet_t.Argument8[2] = 'I';
-				send_packet_t.Argument8[3] = 'L';
 			}
 		}
 		break;
@@ -296,7 +281,7 @@ void app_comProcRx(){
 		case 'D':// Set Kd
 		{
 			app_nvm_setSelfKd(recv_packet_t.Argument32);
-			if(app_nvm_updateData()){
+			if(app_nvm_updateData() == 0){
 				app_controlsys_config(
 					app_nvm_getSelfKp(),
 					app_nvm_getSelfKi(),
@@ -306,11 +291,6 @@ void app_comProcRx(){
 				send_packet_t.Argument8[1] = 'O';
 				send_packet_t.Argument8[2] = 'N';
 				send_packet_t.Argument8[3] = 'E';
-			}else{
-				send_packet_t.Argument8[0] = 'F';
-				send_packet_t.Argument8[1] = 'A';
-				send_packet_t.Argument8[2] = 'I';
-				send_packet_t.Argument8[3] = 'L';
 			}
 		}
 		break;
