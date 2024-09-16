@@ -3,7 +3,7 @@
  * Auto generated Run-Time-Environment Configuration File
  *      *** Do not modify ! ***
  *
- * Project: 'F130_serialServo' 
+ * Project: 'AltTorque' 
  * Target:  'Target 1' 
  */
 

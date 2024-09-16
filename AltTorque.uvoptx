@@ -153,27 +153,22 @@
         <Ww>
           <count>0</count>
           <WinNumber>1</WinNumber>
-          <ItemText>adc_d_t,0x0A</ItemText>
+          <ItemText>pid_t,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>1</count>
           <WinNumber>1</WinNumber>
-          <ItemText>pid_t,0x0A</ItemText>
+          <ItemText>rx_idx</ItemText>
         </Ww>
         <Ww>
           <count>2</count>
           <WinNumber>1</WinNumber>
-          <ItemText>rx_idx</ItemText>
+          <ItemText>recv_packet_t</ItemText>
         </Ww>
         <Ww>
           <count>3</count>
           <WinNumber>1</WinNumber>
-          <ItemText>recv_packet_t</ItemText>
-        </Ww>
-        <Ww>
-          <count>4</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>i_term</ItemText>
+          <ItemText>temp_nvdata_t</ItemText>
         </Ww>
       </WatchWindow1>
       <MemoryWindow1>
@@ -228,7 +223,7 @@
       <pMultCmdsp></pMultCmdsp>
       <SystemViewers>
         <Entry>
-          <Name>System Viewer\USART0</Name>
+          <Name>System Viewer\FMC</Name>
           <WinId>35905</WinId>
         </Entry>
       </SystemViewers>
@@ -530,6 +525,18 @@
       <bDave2>0</bDave2>
       <PathWithFileName>.\src\src_app\app_nvm.h</PathWithFileName>
       <FilenameWithoutPath>app_nvm.h</FilenameWithoutPath>
+      <RteFlg>0</RteFlg>
+      <bShared>0</bShared>
+    </File>
+    <File>
+      <GroupNumber>3</GroupNumber>
+      <FileNumber>24</FileNumber>
+      <FileType>1</FileType>
+      <tvExp>0</tvExp>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <bDave2>0</bDave2>
+      <PathWithFileName>.\src\src_app\app_mon.c</PathWithFileName>
+      <FilenameWithoutPath>app_mon.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>

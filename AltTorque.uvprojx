@@ -509,6 +509,11 @@
               <FileType>5</FileType>
               <FilePath>.\src\src_app\app_nvm.h</FilePath>
             </File>
+            <File>
+              <FileName>app_mon.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\src_app\app_mon.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -565,6 +570,12 @@
       <file attr="config" category="source" name="Device\Firmware\Peripherals\src\gd32f1x0_dbg.c" version="3.2.0">
         <instance index="0" removed="1">RTE\Device\GD32F130G8\gd32f1x0_dbg.c</instance>
         <component Cclass="Device" Cgroup="GD32F1x0_StdPeripherals" Csub="MCUDBG" Cvendor="GigaDevice" Cversion="3.2.0" condition="GD32F1x0 STDPERIPHERALS RCU"/>
+        <package name="GD32F1x0_DFP" schemaVersion="1.1" url="https://gd32mcu.com/data/documents/pack/" vendor="GigaDevice" version="3.2.1"/>
+        <targetInfos/>
+      </file>
+      <file attr="config" category="source" name="Device\Firmware\Peripherals\src\gd32f1x0_fmc.c" version="3.2.0">
+        <instance index="0" removed="1">RTE\Device\GD32F130G8\gd32f1x0_fmc.c</instance>
+        <component Cclass="Device" Cgroup="GD32F1x0_StdPeripherals" Csub="FMC" Cvendor="GigaDevice" Cversion="3.2.0" condition="GD32F1x0 STDPERIPHERALS RCU"/>
         <package name="GD32F1x0_DFP" schemaVersion="1.1" url="https://gd32mcu.com/data/documents/pack/" vendor="GigaDevice" version="3.2.1"/>
         <targetInfos/>
       </file>
