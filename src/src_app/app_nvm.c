@@ -120,7 +120,14 @@ uint8_t app_nvm_writeData(){
 			goto bad_exit;
 	}	
 	
+	// Wait until not busy
 	while((FMC_STAT & FMC_STAT_BUSY));
+	
+	// Wait until operation ended. 
+	while(!(FMC_STAT & FMC_STAT_ENDF));
+	
+	// Clear end flag
+	FMC_STAT |= FMC_STAT_ENDF;
 	
 	FMC_CTL &= ~FMC_CTL_PG;
 
