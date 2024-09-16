@@ -4,19 +4,14 @@
 
 // Constant data to be placed in flash with
 // linker script
-volatile const nvdata_type_t flash_nvdata_t __attribute__((section (".store_config"))) = {
-	.SelfID = 0x01,// Default ID is 1
-	.SelfKp	= 800,// signed Q1.15 format, 16 bit data but kept in 32 bit storage
-	.SelfKi	= 5,// signed Q1.15 format, 16 bit data but kept in 32 bit storage
-	.SelfKd = 0x0000 // signed Q1.15 format, 16 bit data but kept in 32 bit storage
+__IO const nvdata_type_t flash_nvdata_t __attribute__((section (".store_config"))) = {
+	.SelfID = 0x01,		// Default ID is 1
+	.SelfKp	= 1500,		// signed Q1.15 format, 16 bit data but kept in 32 bit storage
+	.SelfKi	= 1,			// signed Q1.15 format, 16 bit data but kept in 32 bit storage
+	.SelfKd = 0x0000 	// signed Q1.15 format, 16 bit data but kept in 32 bit storage
 };
 
-nvdata_type_t temp_nvdata_t;
-
-void app_nvm_init(){
-
-
-}
+__IO nvdata_type_t temp_nvdata_t;
 
 uint8_t app_nvm_checkBlank(){
 	if(
@@ -32,41 +27,41 @@ uint8_t app_nvm_checkBlank(){
 
 void app_nvm_unlockFlash(){
 	// If locked, can be unlocked
-	if(FMC_CTL & (1 << 7)){
+	if(FMC_CTL & FMC_CTL_LK){
 		// Unlock flash with key
-		FMC_KEY = 0x45670123;
-		FMC_KEY = 0xCDEF89AB;
+		FMC_KEY = UNLOCK_KEY0;
+		FMC_KEY = UNLOCK_KEY1;
 
-		while(FMC_CTL & (1 << 7));
+		while(FMC_CTL & FMC_CTL_LK);
 	}
 	
 }
 
 void app_nvm_lockFlash(){
-	if(FMC_CTL & (1 << 7))
+	if(FMC_CTL & FMC_CTL_LK)
 		return;
 	
-	FMC_CTL |= (1 << 7);
+	FMC_CTL |= FMC_CTL_LK;
 }
 
 uint8_t app_nvm_erasePage(){
-	if(FMC_CTL & (1 << 7))
+	if(FMC_CTL & FMC_CTL_LK)
 		return 1;
 	
 	// Wait until not busy
-	while(!(FMC_BUSY & (1 << 0)));
+	while(!(FMC_STAT & FMC_STAT_BUSY));
 
 	FMC_ADDR = CONFIG_ADDR;// Erase page 63 
 	
-	FMC_CTL |= (1 << 1);// Set page erase command
+	FMC_CTL |= FMC_CTL_PER;// Set page erase command
 	
-	FMC_CTL |= (1 << 6);// Set start erase flag
+	FMC_CTL |= FMC_CTL_START;// Set start erase flag
 	
 	// Wait until not busy (erased)
-	while(!(FMC_BUSY & (1 << 0)));
+	while(!(FMC_STAT & FMC_STAT_BUSY));
 	
-	if(FMC_STAT & (1 << 5)){
-		FMC_STAT |= (1 << 5);
+	if(FMC_STAT & FMC_STAT_ENDF){
+		FMC_STAT |= FMC_STAT_ENDF;
 		return 0;
 	}
 	
@@ -78,45 +73,49 @@ uint8_t app_nvm_writeData(){
 		return 1;
 	
 	// Wait until not busy
-	while(!(FMC_BUSY & (1 << 0)));
+	while(!(FMC_STAT & FMC_STAT_BUSY));
 	
-	FMC_CTL |= (1 << 0);// Set flash program command
+	FMC_CTL |= FMC_CTL_PG;// Set flash program command
 	
 	// Write from temp to flash
 	{
 		NVM_DATA->SelfID = temp_nvdata_t.SelfID;
+		__ISB();
 		// Detect for flash program error
-		if(FMC_STAT & (1 << 2))
+		if(FMC_STAT & FMC_STAT_PGERR)
 			goto bad_exit;
 	}
 	
 	{
 		NVM_DATA->SelfKp = temp_nvdata_t.SelfKp;
+		__ISB();
 		// Detect for flash program error
-		if(FMC_STAT & (1 << 2))
+		if(FMC_STAT & FMC_STAT_PGERR)
 			goto bad_exit;
 	}
 	
 	{
 		NVM_DATA->SelfKi = temp_nvdata_t.SelfKi;
+		__ISB();
 		// Detect for flash program error
-		if(FMC_STAT & (1 << 2))
+		if(FMC_STAT & FMC_STAT_PGERR)
 			goto bad_exit;
 	}
 	
 	{
 		NVM_DATA->SelfKd = temp_nvdata_t.SelfKd;	
+		__ISB();
 		// Detect for flash program error
-		if(FMC_STAT & (1 << 2))
+		if(FMC_STAT & FMC_STAT_PGERR)
 			goto bad_exit;
 	}	
 	
-	while(!(FMC_BUSY & (1 << 0)));
+	while(!(FMC_STAT & FMC_STAT_BUSY));
 
 	return 0;
 	
 bad_exit:	
-	FMC_STAT |= (1 << 2);// Clear flag
+	FMC_STAT |= FMC_STAT_PGERR;// Clear flag
 	app_nvm_lockFlash();// Safety lock
 	return 1;
 }
@@ -138,6 +137,8 @@ uint8_t app_nvm_verifyData(){
 }
 
 uint8_t app_nvm_updateData(){
+	// Entering critical section
+	__disable_irq();
 	app_nvm_unlockFlash();
 	
 	if(app_nvm_erasePage()){
@@ -149,7 +150,7 @@ uint8_t app_nvm_updateData(){
 	}
 	
 	app_nvm_lockFlash();
-	
+	__enable_irq();
 	return 0;
 }
 

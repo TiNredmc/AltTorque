@@ -12,7 +12,7 @@ typedef struct{
 	uint32_t SelfKd;
 }nvdata_type_t;
 
-#define NVM_DATA ((nvdata_type_t*)CONFIG_ADDR)
+#define NVM_DATA ((__IO nvdata_type_t*)CONFIG_ADDR)
 
 
 void app_nvm_init();
