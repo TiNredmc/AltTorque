@@ -96,7 +96,7 @@ void app_servo_ledBreathingSlow(){
 
 void app_servo_ledRunner(){
 	// First priority, Fault indicator
-	if(app_controlsys_faultDetected()){
+	if(app_mon_faultDetected()){
 		app_servo_ledBreathingFast();
 		return;
 	}
@@ -142,7 +142,7 @@ void app_servo_runner(){
 	// 50Hz Voltage monitoring
 	if((millis() - voltmonitor_millis) > 200){
 		voltmonitor_millis = millis();
-		app_controlsys_vmonRunner();
+		app_mon_vmonRunner();
 		app_servo_ledRunner();		
 	}
 	
