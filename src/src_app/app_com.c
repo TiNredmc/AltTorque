@@ -19,8 +19,6 @@ uint8_t app_com_tx_fsm = 0;
 uint8_t tx_req_len = 0;
 uint8_t tx_write_idx = 0;
 
-uint8_t command_status = 0;
-
 // private prototypes
 void app_comHeaderSync();
 void app_comProcRx();
@@ -142,7 +140,6 @@ void app_comHeaderSync(){
 void app_comProcRx(){
 	
 	app_com_main_fsm = COM_RECV;
-	command_status = 0xFF;
 	send_packet_t.Argument8[0] = 'F';
 	send_packet_t.Argument8[1] = 'A';
 	send_packet_t.Argument8[2] = 'I';
@@ -171,7 +168,6 @@ void app_comProcRx(){
 	switch(recv_packet_t.Command){
 		case 'N':// No operation command
 		{
-			command_status = 0x00;
 			send_packet_t.Argument8[0] = 'N';
 			send_packet_t.Argument8[1] = 'O';
 			send_packet_t.Argument8[2] = 'P';
@@ -181,9 +177,9 @@ void app_comProcRx(){
 		
 		case 'M':// Move absolute
 		{
-			app_controlsys_updateSP(recv_packet_t.Argument8[0]);
+			app_controlsys_updateSP(
+				recv_packet_t.Argument8[0] + 30);
 			
-			command_status = 0x00;
 			send_packet_t.Argument8[0] = 'D';
 			send_packet_t.Argument8[1] = 'O';
 			send_packet_t.Argument8[2] = 'N';
@@ -198,7 +194,6 @@ void app_comProcRx(){
 				app_controlsys_getPotDegree()
 			);
 			
-			command_status = 0x00;
 			send_packet_t.Argument8[0] = 'D';
 			send_packet_t.Argument8[1] = 'O';
 			send_packet_t.Argument8[2] = 'N';
@@ -208,7 +203,6 @@ void app_comProcRx(){
 		
 		case 'S':// Spin with certain RPM
 		{
-			command_status = 0x00;
 			send_packet_t.Argument8[0] = 'D';
 			send_packet_t.Argument8[1] = 'O';
 			send_packet_t.Argument8[2] = 'N';
@@ -218,9 +212,9 @@ void app_comProcRx(){
 		
 		case 'X':// Get current position
 		{
-			send_packet_t.Argument32 = app_controlsys_getPotDegree();
+			send_packet_t.Argument32 = 
+				app_controlsys_getPotDegree() + 30;
 			
-			command_status = 0x00;
 		}
 		break;
 		
@@ -228,7 +222,6 @@ void app_comProcRx(){
 		{
 			send_packet_t.Argument32 = 1;
 			
-			command_status = 0x00;
 		}
 		break;
 		
@@ -239,8 +232,7 @@ void app_comProcRx(){
 				(recv_packet_t.Argument8[0] != 0x00)
 			){
 				app_nvm_setSelfID(recv_packet_t.Argument8[0]);
-				command_status = app_nvm_updateData();
-				if(command_status == 0){
+				if(app_nvm_updateData()){
 					servo_self_id = app_nvm_getSelfID();
 					send_packet_t.Argument8[0] = 'D';
 					send_packet_t.Argument8[1] = 'O';
@@ -260,8 +252,7 @@ void app_comProcRx(){
 		case 'P':// Set Kp
 		{
 			app_nvm_setSelfKp(recv_packet_t.Argument32);
-			command_status = app_nvm_updateData();
-			if(command_status == 0){
+			if(app_nvm_updateData()){
 				app_controlsys_config(
 					app_nvm_getSelfKp(),
 					app_nvm_getSelfKi(),
@@ -283,8 +274,7 @@ void app_comProcRx(){
 		case 'I':// Set Ki
 		{
 			app_nvm_setSelfKi(recv_packet_t.Argument32);
-			command_status = app_nvm_updateData();
-			if(command_status == 0){
+			if(app_nvm_updateData()){
 				app_controlsys_config(
 					app_nvm_getSelfKp(),
 					app_nvm_getSelfKi(),
@@ -306,8 +296,7 @@ void app_comProcRx(){
 		case 'D':// Set Kd
 		{
 			app_nvm_setSelfKd(recv_packet_t.Argument32);
-			command_status = app_nvm_updateData();
-			if(command_status == 0){
+			if(app_nvm_updateData()){
 				app_controlsys_config(
 					app_nvm_getSelfKp(),
 					app_nvm_getSelfKi(),
