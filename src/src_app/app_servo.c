@@ -116,6 +116,7 @@ void app_servo_Init(){
 	
 	// Check for configuration data in flash
 	if(!app_nvm_checkBlank()){
+		app_nvm_init();
 		// TODO : If Blank, do something
 		app_controlsys_config(
 			app_nvm_getSelfKp(),

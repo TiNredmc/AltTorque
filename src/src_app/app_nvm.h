@@ -3,7 +3,7 @@
 
 #include "gd32f1x0_fmc.h"
 
-#define CONFIG_ADDR 0x0800FC00
+#define CONFIG_ADDR 0x0800FC00UL
 
 typedef struct{
 	uint32_t SelfID;

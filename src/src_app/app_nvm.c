@@ -13,6 +13,13 @@ __IO const nvdata_type_t flash_nvdata_t __attribute__((section (".store_config")
 
 __IO nvdata_type_t temp_nvdata_t;
 
+void app_nvm_init(){
+	temp_nvdata_t.SelfID = flash_nvdata_t.SelfID;
+	temp_nvdata_t.SelfKp = flash_nvdata_t.SelfKp;
+	temp_nvdata_t.SelfKi = flash_nvdata_t.SelfKi;
+	temp_nvdata_t.SelfKd = flash_nvdata_t.SelfKd;
+}
+
 uint8_t app_nvm_checkBlank(){
 	if(
 	(flash_nvdata_t.SelfID == 0xFFFFFFFF) ||	
@@ -49,31 +56,34 @@ uint8_t app_nvm_erasePage(){
 		return 1;
 	
 	// Wait until not busy
-	while(!(FMC_STAT & FMC_STAT_BUSY));
+	while((FMC_STAT & FMC_STAT_BUSY));
 
-	FMC_ADDR = CONFIG_ADDR;// Erase page 63 
-	
 	FMC_CTL |= FMC_CTL_PER;// Set page erase command
+	
+	FMC_ADDR = CONFIG_ADDR;// Erase page 63 
 	
 	FMC_CTL |= FMC_CTL_START;// Set start erase flag
 	
 	// Wait until not busy (erased)
-	while(!(FMC_STAT & FMC_STAT_BUSY));
+	while((FMC_STAT & FMC_STAT_BUSY));
 	
-	if(FMC_STAT & FMC_STAT_ENDF){
-		FMC_STAT |= FMC_STAT_ENDF;
-		return 0;
-	}
+	// Wait until operation ended. 
+	while(!(FMC_STAT & FMC_STAT_ENDF));
 	
-	return 1;
+	// Clear end flag
+	FMC_STAT |= FMC_STAT_ENDF;
+	
+	FMC_CTL &= ~FMC_CTL_PER;
+	
+	return 0;
 }
 
 uint8_t app_nvm_writeData(){
-	if(FMC_CTL & (1 << 7))
+	if(FMC_CTL & FMC_CTL_LK)
 		return 1;
 	
 	// Wait until not busy
-	while(!(FMC_STAT & FMC_STAT_BUSY));
+	while((FMC_STAT & FMC_STAT_BUSY));
 	
 	FMC_CTL |= FMC_CTL_PG;// Set flash program command
 	
@@ -110,7 +120,9 @@ uint8_t app_nvm_writeData(){
 			goto bad_exit;
 	}	
 	
-	while(!(FMC_STAT & FMC_STAT_BUSY));
+	while((FMC_STAT & FMC_STAT_BUSY));
+	
+	FMC_CTL &= ~FMC_CTL_PG;
 
 	return 0;
 	
@@ -137,40 +149,41 @@ uint8_t app_nvm_verifyData(){
 }
 
 uint8_t app_nvm_updateData(){
+	uint8_t ret = 0;
 	// Entering critical section
 	__disable_irq();
 	app_nvm_unlockFlash();
 	
 	if(app_nvm_erasePage()){
-		return 1;
+		ret = 1;
 	}else if (app_nvm_writeData()){
-		return 2;
+		ret =  2;
 	}else if (app_nvm_verifyData()){
-		return 3;
+		ret = 3;
 	}
 	
 	app_nvm_lockFlash();
 	__enable_irq();
-	return 0;
+	return ret;
 }
 
 void app_nvm_setSelfID(uint8_t ID){
-	if(NVM_DATA->SelfID != temp_nvdata_t.SelfID)
+	if(NVM_DATA->SelfID != ID)
 		temp_nvdata_t.SelfID = ID;
 }
 
 void app_nvm_setSelfKp(int32_t Kp){
-	if(NVM_DATA->SelfKp != temp_nvdata_t.SelfKp)
+	if(NVM_DATA->SelfKp != Kp)
 		temp_nvdata_t.SelfKp = (uint32_t)Kp;
 }
 
 void app_nvm_setSelfKi(int32_t Ki){
-	if(NVM_DATA->SelfKi != temp_nvdata_t.SelfKi)
+	if(NVM_DATA->SelfKi != Ki)
 		temp_nvdata_t.SelfKi = (uint32_t)Ki;
 }
 
 void app_nvm_setSelfKd(int32_t Kd){
-	if(NVM_DATA->SelfKd != temp_nvdata_t.SelfKd)
+	if(NVM_DATA->SelfKd != Kd)
 		temp_nvdata_t.SelfKd = (uint32_t)Kd;
 }
 
